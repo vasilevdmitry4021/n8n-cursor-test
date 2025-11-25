@@ -15,6 +15,8 @@ from werkzeug.exceptions import HTTPException
 from database import db, init_db
 from models import Order
 
+# Enumerations mirrored from the public API spec; changing them requires
+# updating both the validation layer and the documentation.
 PRIORITY_CHOICES = {"low", "medium", "high"}
 STATUS_CHOICES = {"created", "in_progress", "completed"}
 REQUIRED_FIELDS = {
@@ -33,10 +35,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("toro.api")
 
+# Keep the app/module level singleton so `flask run` and WSGI servers reuse
+# the same initialized extensions.
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
-CORS(app)
-init_db(app)
+CORS(app)  # Allow all origins for easier integration during development.
+init_db(app)  # Creates tables on first import to guarantee the API is usable.
 
 
 class ValidationError(ValueError):
@@ -130,11 +134,14 @@ def generate_order_number() -> str:
         .first()
     )
 
+    # Default to 001 when there are no orders for the current year yet.
     next_sequence = 1
     if latest_order:
         try:
             next_sequence = int(latest_order.order_number.split("-")[-1]) + 1
         except (AttributeError, ValueError):
+            # Fallback to the DB id to avoid collisions if someone tampered
+            # with the order number manually.
             next_sequence = latest_order.id + 1
 
     return f"{prefix}{next_sequence:03d}"
@@ -150,6 +157,8 @@ def create_order() -> Any:
 
     data = validate_order_payload(payload)
 
+    # `status` and `order_number` are controlled server-side to prevent
+    # clients from spoofing state transitions.
     order = Order(
         order_number=generate_order_number(),
         status="created",
