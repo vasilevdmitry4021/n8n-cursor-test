@@ -26,6 +26,9 @@ python app.py
 - `requirements.txt` — зависимости
 - `toro.db` — SQLite база данных (создаётся автоматически)
 
+### Переменные окружения
+- `TORO_DATABASE_URL` — переопределить путь к базе (по умолчанию `sqlite:///toro.db`). Пример: `export TORO_DATABASE_URL=sqlite:////tmp/toro.db`.
+
 ## Структура таблицы orders
 | Поле             | Тип        | Описание                                   |
 |------------------|------------|--------------------------------------------|
@@ -73,6 +76,10 @@ curl "http://localhost:5000/api/v1/orders?priority=high&status=in_progress&depar
 ```bash
 curl http://localhost:5000/api/v1/orders/1
 ```
+
+## Логирование и CORS
+- Все события пишутся в stdout в формате `timestamp | level | logger | message`. Создание заказа логируется уровнем INFO, ошибки — WARNING/ERROR.
+- CORS открыт для всех доменов, что упрощает разработку фронтенда. Для продакшена ограничьте источники в `app.py`.
 
 ## Возможные ошибки
 - `400 Bad Request` — невалидные данные или параметры фильтрации
