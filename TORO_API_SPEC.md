@@ -23,6 +23,7 @@ REST API для управления заказами на техническо�
 - `requester_name` - string, обязательное (ФИО заказчика)
 - `department` - string, обязательное (отдел/цех)
 - `contact_phone` - string, обязательное (контактный телефон в формате +7-XXX-XXX-XX-XX)
+- `contact_email` - string, обязательное (валидный email заявителя)
 - `created_at` - datetime, автоматически при создании
 - `updated_at` - datetime, автоматически при обновлении
 
@@ -40,7 +41,8 @@ REST API для управления заказами на техническо�
   "priority": "high",
   "requester_name": "Иванов Иван Иванович",
   "department": "Цех №1",
-  "contact_phone": "+7-900-123-45-67"
+  "contact_phone": "+7-900-123-45-67",
+  "contact_email": "ivanov@example.com"
 }
 ```
 
@@ -57,6 +59,7 @@ REST API для управления заказами на техническо�
   "requester_name": "Иванов Иван Иванович",
   "department": "Цех №1",
   "contact_phone": "+7-900-123-45-67",
+  "contact_email": "ivanov@example.com",
   "created_at": "2025-11-24T15:30:00Z",
   "updated_at": "2025-11-24T15:30:00Z"
 }
@@ -103,6 +106,7 @@ GET /api/v1/orders?status=in_progress&department=Цех №1
       "requester_name": "Иванов И.И.",
       "department": "Цех №1",
       "contact_phone": "+7-900-123-45-67",
+      "contact_email": "ivanov@example.com",
       "created_at": "2025-11-24T15:30:00Z",
       "updated_at": "2025-11-24T15:30:00Z"
     },
@@ -117,6 +121,7 @@ GET /api/v1/orders?status=in_progress&department=Цех №1
       "requester_name": "Петров П.П.",
       "department": "Цех №2",
       "contact_phone": "+7-911-222-33-44",
+      "contact_email": "petrov@example.com",
       "created_at": "2025-11-24T16:00:00Z",
       "updated_at": "2025-11-24T16:15:00Z"
     }
@@ -151,6 +156,7 @@ GET /api/v1/orders/1
   "requester_name": "Иванов Иван Иванович",
   "department": "Цех №1",
   "contact_phone": "+7-900-123-45-67",
+  "contact_email": "ivanov@example.com",
   "created_at": "2025-11-24T15:30:00Z",
   "updated_at": "2025-11-24T15:30:00Z"
 }

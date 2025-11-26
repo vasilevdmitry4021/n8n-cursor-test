@@ -22,6 +22,7 @@ class Order(db.Model):
     requester_name = db.Column(db.String(120), nullable=False)
     department = db.Column(db.String(120), nullable=False)
     contact_phone = db.Column(db.String(20), nullable=False)
+    contact_email = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -44,6 +45,7 @@ class Order(db.Model):
             "requester_name": self.requester_name,
             "department": self.department,
             "contact_phone": self.contact_phone,
+            "contact_email": self.contact_email,
             "created_at": self._format_dt(self.created_at),
             "updated_at": self._format_dt(self.updated_at),
         }

@@ -15,7 +15,7 @@
 
 ## 3. Описание потока
 1. Пользователь аутентифицируется во внутреннем инструменте, который обращается к API.
-2. При получении запроса на ремонт диспетчер отправляет `POST /api/v1/orders` с обязательными полями (`equipment_type`, `equipment_id`, `issue_description`, `requester_name`, `department`, `contact_phone`) и опциональным `priority`.
+2. При получении запроса на ремонт диспетчер отправляет `POST /api/v1/orders` с обязательными полями (`equipment_type`, `equipment_id`, `issue_description`, `requester_name`, `department`, `contact_phone`, `contact_email`) и опциональным `priority`.
 3. Сервис:
    - нормализует текстовые поля, проверяет телефон по маске `+7-XXX-XXX-XX-XX`;
    - выставляет `status=created` и генерирует `order_number` формата `TORO-YYYY-NNN`;
@@ -27,7 +27,7 @@
 ## 4. Acceptance Criteria
 - **Создание заявки**
   - GIVEN корректное тело запроса, WHEN отправляется `POST /api/v1/orders`, THEN API возвращает `201` и JSON с заполненными полями, включая `order_number`, `status="created"`, метки времени.
-  - GIVEN отсутствует обязательное поле или телефон вне формата, WHEN выполняется запрос, THEN API возвращает `400` с `error="validation_error"` и деталями по каждому полю.
+  - GIVEN отсутствует обязательное поле, email некорректен или телефон вне формата, WHEN выполняется запрос, THEN API возвращает `400` с `error="validation_error"` и деталями по каждому полю.
 - **Список заявок**
   - GIVEN БД содержит записи, WHEN выполняется `GET /api/v1/orders` без фильтров, THEN сервис возвращает массив `orders` в порядке `created_at` DESC и `total` равный количеству записей.
   - GIVEN применены query-параметры `priority`, `status`, `department`, WHEN вызывается список, THEN выдаются только записи, удовлетворяющие всем переданным фильтрам, иначе `400` с пояснениями.
@@ -44,7 +44,7 @@
 - Определён хост БД (`TORO_DATABASE_URL`) и стратегия резервного копирования `toro.db`.
 
 ## 6. Definition of Done
-- Все Acceptance Criteria удовлетворены вручную либо curl-тестами из `USER_GUIDE_2.md`.
+- Все Acceptance Criteria удовлетворены вручную либо curl-тестами из `USER_GUIDE_2.md`, включая проверку email и телефона.
 - Ошибки 4xx/5xx логируются, а `db.create_all()` выполнялся без исключений при старте.
 - README содержит актуальные инструкции по запуску, а код сопровождается минимально необходимыми комментариями.
 - Проведены smoke-тесты: `POST` создание + `GET` список.
