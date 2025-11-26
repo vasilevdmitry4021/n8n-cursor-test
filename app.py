@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from datetime import datetime
 from typing import Any, Mapping
 
@@ -11,23 +10,11 @@ from flask import Flask, abort, jsonify, request
 from flask_cors import CORS
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.exceptions import HTTPException
+from pydantic import ValidationError as PydanticValidationError
 
 from database import db, init_db
 from models import Order
-
-# Enumerations mirrored from the public API spec; changing them requires
-# updating both the validation layer and the documentation.
-PRIORITY_CHOICES = {"low", "medium", "high"}
-STATUS_CHOICES = {"created", "in_progress", "completed"}
-REQUIRED_FIELDS = {
-    "equipment_type",
-    "equipment_id",
-    "issue_description",
-    "requester_name",
-    "department",
-    "contact_phone",
-}
-PHONE_PATTERN = re.compile(r"^\+7-\d{3}-\d{3}-\d{2}-\d{2}$")
+from schemas import OrderCreateSchema, OrderFiltersSchema
 
 logging.basicConfig(
     level=logging.INFO,
@@ -43,7 +30,7 @@ CORS(app)  # Allow all origins for easier integration during development.
 init_db(app)  # Creates tables on first import to guarantee the API is usable.
 
 
-class ValidationError(ValueError):
+class RequestValidationError(ValueError):
     """Raised when incoming payloads do not satisfy requirements."""
 
     def __init__(self, errors: dict[str, str]):
@@ -51,75 +38,39 @@ class ValidationError(ValueError):
         self.errors = errors
 
 
-def normalize_string(value: Any) -> str | None:
-    """Trim incoming strings; return None for empty/invalid values."""
+def _format_pydantic_errors(error: PydanticValidationError) -> dict[str, str]:
+    """Flatten pydantic errors into a field -> message mapping."""
 
-    if isinstance(value, str):
-        trimmed = value.strip()
-        return trimmed or None
-    return None
+    formatted: dict[str, str] = {}
+    for err in error.errors():
+        location = ".".join(str(part) for part in err.get("loc", ()))
+        formatted[location or "body"] = err.get("msg", "Invalid value")
+    return formatted
 
 
-def validate_order_payload(payload: dict[str, Any]) -> dict[str, str]:
-    """Validate and sanitize payload for order creation."""
+def validate_order_payload(payload: Any) -> dict[str, Any]:
+    """Run pydantic validation for incoming order creation requests."""
 
     if not isinstance(payload, dict):
-        raise ValidationError({"body": "JSON body must be an object"})
+        raise RequestValidationError({"body": "JSON body must be an object"})
 
-    errors: dict[str, str] = {}
-    result: dict[str, str] = {}
+    try:
+        validated = OrderCreateSchema.model_validate(payload)
+    except PydanticValidationError as exc:
+        raise RequestValidationError(_format_pydantic_errors(exc)) from exc
 
-    for field in REQUIRED_FIELDS:
-        value = normalize_string(payload.get(field))
-        if not value:
-            errors[field] = "Field is required"
-        else:
-            result[field] = value
-
-    priority = normalize_string(payload.get("priority")) or "medium"
-    if priority not in PRIORITY_CHOICES:
-        errors["priority"] = f"Priority must be one of {sorted(PRIORITY_CHOICES)}"
-    else:
-        result["priority"] = priority
-
-    contact_phone = result.get("contact_phone")
-    if contact_phone and not PHONE_PATTERN.match(contact_phone):
-        errors["contact_phone"] = "Phone must match +7-XXX-XXX-XX-XX"
-
-    if errors:
-        raise ValidationError(errors)
-
-    return result
+    return validated.model_dump()
 
 
 def validate_filters(args: Mapping[str, str]) -> dict[str, str]:
-    """Validate query parameters for list endpoint."""
+    """Validate query parameters for list endpoint via pydantic."""
 
-    errors: dict[str, str] = {}
-    filters: dict[str, str] = {}
+    try:
+        filters = OrderFiltersSchema.model_validate(dict(args))
+    except PydanticValidationError as exc:
+        raise RequestValidationError(_format_pydantic_errors(exc)) from exc
 
-    priority = args.get("priority")
-    if priority:
-        if priority not in PRIORITY_CHOICES:
-            errors["priority"] = f"Priority must be one of {sorted(PRIORITY_CHOICES)}"
-        else:
-            filters["priority"] = priority
-
-    status = args.get("status")
-    if status:
-        if status not in STATUS_CHOICES:
-            errors["status"] = f"Status must be one of {sorted(STATUS_CHOICES)}"
-        else:
-            filters["status"] = status
-
-    department = normalize_string(args.get("department"))
-    if department:
-        filters["department"] = department
-
-    if errors:
-        raise ValidationError(errors)
-
-    return filters
+    return filters.model_dump(exclude_none=True)
 
 
 def generate_order_number() -> str:
@@ -153,7 +104,7 @@ def create_order() -> Any:
 
     payload = request.get_json(silent=True)
     if payload is None:
-        raise ValidationError({"body": "JSON body is required"})
+        raise RequestValidationError({"body": "JSON body is required"})
 
     data = validate_order_payload(payload)
 
@@ -217,8 +168,8 @@ def get_order(order_id: int) -> Any:
     return jsonify(order.to_dict()), 200
 
 
-@app.errorhandler(ValidationError)
-def handle_validation_error(error: ValidationError):
+@app.errorhandler(RequestValidationError)
+def handle_validation_error(error: RequestValidationError):
     logger.warning("Validation error: %s", error.errors)
     return jsonify({"error": "validation_error", "details": error.errors}), 400
 

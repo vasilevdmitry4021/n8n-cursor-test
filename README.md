@@ -28,6 +28,7 @@ python app.py
 
 ### Переменные окружения
 - `TORO_DATABASE_URL` — переопределить путь к базе (по умолчанию `sqlite:///toro.db`). Пример: `export TORO_DATABASE_URL=sqlite:////tmp/toro.db`.
+- `contact_email` теперь обязательное поле заказа; при обновлении схемы удалите старый `toro.db`, чтобы SQLAlchemy пересоздал таблицу с новым столбцом.
 
 ## Структура таблицы orders
 | Поле             | Тип        | Описание                                   |
@@ -42,6 +43,7 @@ python app.py
 | requester_name   | String     | ФИО заказчика                              |
 | department       | String     | Отдел/цех                                  |
 | contact_phone    | String     | Телефон `+7-XXX-XXX-XX-XX`                 |
+| contact_email    | String     | Валидный email заказчика                   |
 | created_at       | DateTime   | Дата создания                              |
 | updated_at       | DateTime   | Дата обновления                            |
 
@@ -58,7 +60,8 @@ curl -X POST http://localhost:5000/api/v1/orders \
         "priority": "medium",
         "requester_name": "Петров Петр Петрович",
         "department": "Цех №2",
-        "contact_phone": "+7-911-222-33-44"
+        "contact_phone": "+7-911-222-33-44",
+        "contact_email": "petrov@example.com"
       }'
 ```
 

@@ -11,6 +11,7 @@
 - **Язык**: Python 3.11+
 - **Веб-фреймворк**: Flask
 - **ORM**: Flask-SQLAlchemy
+- **Валидация**: Pydantic 2.x
 - **База данных**: SQLite (файл `toro.db`, создается автоматически)
 - **CORS**: Flask-CORS (по умолчанию разрешает все источники для упрощения разработки)
 
@@ -39,6 +40,7 @@ pip install -r requirements.txt
 ```bash
 export TORO_DATABASE_URL="sqlite:////tmp/toro.db"
 ```
+> После добавления новых полей (например, `contact_email`) удалите старый `toro.db`, чтобы SQLAlchemy пересоздал таблицы.
 
 ## 5. Запуск
 ```bash
@@ -64,7 +66,8 @@ python app.py
            "priority": "high",
            "requester_name": "Петров П.П.",
            "department": "Цех №2",
-           "contact_phone": "+7-911-222-33-44"
+           "contact_phone": "+7-911-222-33-44",
+           "contact_email": "petrov@example.com"
          }'
    ```
 2. Убедитесь, что ответ содержит `order_number` в формате `TORO-YYYY-NNN`.
@@ -76,7 +79,7 @@ python app.py
 ## 7. Работа с API
 
 ### 7.1 Создание заказа — `POST /api/v1/orders`
-Обязательные поля: `equipment_type`, `equipment_id`, `issue_description`, `requester_name`, `department`, `contact_phone`.
+Обязательные поля: `equipment_type`, `equipment_id`, `issue_description`, `requester_name`, `department`, `contact_phone`, `contact_email`.
 Необязательные: `priority` (по умолчанию `medium`). Статус и номер заявки выставляются на сервере.
 
 Пример тела запроса:
@@ -88,7 +91,8 @@ python app.py
   "priority": "high",
   "requester_name": "Иванов Иван",
   "department": "Цех №1",
-  "contact_phone": "+7-900-123-45-67"
+  "contact_phone": "+7-900-123-45-67",
+  "contact_email": "ivanov@example.com"
 }
 ```
 
@@ -110,9 +114,10 @@ python app.py
 Возвращает заявку по `id`. При отсутствии ресурса — `404 Not Found`.
 
 ## 8. Правила валидации
-- Формат телефона строго `+7-XXX-XXX-XX-XX` (регулярное выражение в `app.py`).
-- Поля очищаются от пробелов; пустые строки считаются ошибкой.
-- Недопустимые значения `priority`, `status` или фильтров вызовут `400 Bad Request` с деталями.
+- Все входные данные проходят через Pydantic-схемы (`schemas.py`), что гарантирует очистку пробелов и запрет лишних полей.
+- Формат телефона строго `+7-XXX-XXX-XX-XX`.
+- `contact_email` проверяется как корректный email (RFC-приблизительно) и обязателен.
+- Недопустимые значения `priority`, `status`, фильтров или пустые строки вызовут `400 Bad Request` с деталями.
 
 ## 9. Обработка ошибок
 | Код | Причина | Действия |
