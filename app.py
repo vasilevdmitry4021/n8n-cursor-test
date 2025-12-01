@@ -21,6 +21,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 logger = logging.getLogger("toro.api")
+SERVICE_NAME = "TORO Maintenance Orders API"
 SPEC_VERSION = "Opus 4.5"
 SERVER_STARTED_AT = datetime.utcnow()
 
@@ -235,6 +236,7 @@ def healthcheck() -> Any:
     return (
         jsonify(
             {
+                "service": SERVICE_NAME,
                 "status": "ok",
                 "spec_version": SPEC_VERSION,
                 "uptime_seconds": uptime_seconds,
@@ -250,7 +252,7 @@ def root() -> Any:
 
     return jsonify(
         {
-            "message": "TORO Maintenance Orders API",
+            "message": SERVICE_NAME,
             "docs": "USER_GUIDE.md",
             "spec_version": SPEC_VERSION,
         }

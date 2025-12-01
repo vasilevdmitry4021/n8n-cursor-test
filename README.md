@@ -92,7 +92,7 @@ curl -X PATCH http://localhost:5000/api/v1/orders/1/status \
 ```bash
 curl http://localhost:5000/health
 ```
-> Ответ: `{"status": "ok", "spec_version": "Opus 4.5", "uptime_seconds": 42}` — удобно для мониторинга и readiness-проб (поле `uptime_seconds` показывает, сколько секунд сервис работает).
+> Ответ: `{"service": "TORO Maintenance Orders API", "status": "ok", "spec_version": "Opus 4.5", "uptime_seconds": 42}` — удобно для мониторинга и readiness-проб (поля `service` и `uptime_seconds` помогают отследить инстанс и длительность его работы).
 
 ### Корневой endpoint
 ```bash
