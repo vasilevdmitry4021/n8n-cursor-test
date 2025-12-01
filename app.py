@@ -14,13 +14,20 @@ from pydantic import ValidationError as PydanticValidationError
 
 from database import db, init_db
 from models import Order
-from schemas import OrderCreateSchema, OrderFiltersSchema
+from schemas import OrderCreateSchema, OrderFiltersSchema, OrderStatusUpdateSchema
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 logger = logging.getLogger("toro.api")
+SPEC_VERSION = "Opus 4.5"
+
+ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
+    "created": {"in_progress"},
+    "in_progress": {"completed"},
+    "completed": set(),
+}
 
 # Keep the app/module level singleton so `flask run` and WSGI servers reuse
 # the same initialized extensions.
@@ -98,6 +105,23 @@ def generate_order_number() -> str:
     return f"{prefix}{next_sequence:03d}"
 
 
+def ensure_valid_status_transition(order: Order, next_status: str) -> None:
+    """Ensure status changes follow Opus 4.5 sequential flow."""
+
+    if order.status == next_status:
+        raise RequestValidationError({"status": "Order already in requested status"})
+
+    allowed = ALLOWED_STATUS_TRANSITIONS.get(order.status, set())
+    if next_status not in allowed:
+        abort(
+            409,
+            description=(
+                f"Transition {order.status!r} -> {next_status!r} is not allowed "
+                f"(Opus 4.5 linear workflow)"
+            ),
+        )
+
+
 @app.route("/api/v1/orders", methods=["POST"])
 def create_order() -> Any:
     """Create a new order."""
@@ -168,6 +192,40 @@ def get_order(order_id: int) -> Any:
     return jsonify(order.to_dict()), 200
 
 
+@app.route("/api/v1/orders/<int:order_id>/status", methods=["PATCH"])
+def update_order_status(order_id: int) -> Any:
+    """Update order status with Opus 4.5 transition checks."""
+
+    payload = request.get_json(silent=True)
+    if payload is None:
+        raise RequestValidationError({"body": "JSON body is required"})
+
+    data = OrderStatusUpdateSchema.model_validate(payload).model_dump()
+
+    order = db.session.get(Order, order_id)
+    if order is None:
+        abort(404, description="Order not found")
+
+    ensure_valid_status_transition(order, data["status"])
+    order.status = data["status"]
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as exc:  # pragma: no cover - DB failure path
+        db.session.rollback()
+        logger.exception("Failed to update status for %s: %s", order_id, exc)
+        abort(500, description="Unable to update status at this time")
+
+    logger.info(
+        "Order %s transitioned to %s under %s",
+        order.order_number,
+        order.status,
+        SPEC_VERSION,
+    )
+
+    return jsonify(order.to_dict()), 200
+
+
 @app.errorhandler(RequestValidationError)
 def handle_validation_error(error: RequestValidationError):
     logger.warning("Validation error: %s", error.errors)
@@ -190,6 +248,14 @@ def handle_exception(error: Exception):  # pragma: no cover - fallback path
         jsonify({"error": "internal_server_error", "message": "Unexpected server error"}),
         500,
     )
+
+
+@app.after_request
+def attach_spec_version(response):
+    """Expose Opus spec version for observability."""
+
+    response.headers.setdefault("X-Opus-Version", SPEC_VERSION)
+    return response
 
 
 if __name__ == "__main__":

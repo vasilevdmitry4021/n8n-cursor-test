@@ -80,6 +80,19 @@ curl "http://localhost:5000/api/v1/orders?priority=high&status=in_progress&depar
 curl http://localhost:5000/api/v1/orders/1
 ```
 
+### Обновление статуса заказа (Opus 4.5)
+```bash
+curl -X PATCH http://localhost:5000/api/v1/orders/1/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+```
+> Статусы изменяются последовательно: `created → in_progress → completed`. Сервер вернёт 409, если попытаться пропустить стадию или повторно установить текущее значение.
+
+## Дополнительная валидация (Opus 4.5)
+- `equipment_id` должен соответствовать шаблону `^[A-Z0-9-]{3,40}$` и автоматически приводится к верхнему регистру.
+- Поле `department` очищается от лишних пробелов и не может быть пустым.
+- Все ответы содержат заголовок `X-Opus-Version: Opus 4.5`, что облегчает мониторинг совместимости клиента и сервера.
+
 ## Логирование и CORS
 - Все события пишутся в stdout в формате `timestamp | level | logger | message`. Создание заказа логируется уровнем INFO, ошибки — WARNING/ERROR.
 - CORS открыт для всех доменов, что упрощает разработку фронтенда. Для продакшена ограничьте источники в `app.py`.

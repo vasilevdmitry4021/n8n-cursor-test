@@ -19,6 +19,7 @@ Status = Literal["created", "in_progress", "completed"]
 PhoneStr = Annotated[str, Field(min_length=17, max_length=17)]
 
 PHONE_PATTERN = re.compile(r"^\+7-\d{3}-\d{3}-\d{2}-\d{2}$")
+EQUIPMENT_ID_PATTERN = re.compile(r"^[A-Z0-9-]{3,40}$")
 
 
 class _BaseSchema(BaseModel):
@@ -56,6 +57,23 @@ class OrderCreateSchema(_BaseSchema):
             raise ValueError("Phone must match +7-XXX-XXX-XX-XX")
         return value
 
+    @field_validator("equipment_id")
+    @classmethod
+    def validate_equipment_id(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if not EQUIPMENT_ID_PATTERN.match(normalized):
+            msg = "Equipment ID must be 3-40 chars: A-Z, 0-9 or '-' (Opus 4.5)"
+            raise ValueError(msg)
+        return normalized
+
+    @field_validator("department")
+    @classmethod
+    def normalize_department(cls, value: str) -> str:
+        collapsed = " ".join(value.split())
+        if not collapsed:
+            raise ValueError("Department is required")
+        return collapsed
+
 
 class OrderFiltersSchema(_BaseSchema):
     """Schema for validating query parameters of the list endpoint."""
@@ -65,4 +83,16 @@ class OrderFiltersSchema(_BaseSchema):
     department: Annotated[str, Field(min_length=1, max_length=120)] | None = None
 
 
-__all__ = ["OrderCreateSchema", "OrderFiltersSchema", "Priority", "Status"]
+class OrderStatusUpdateSchema(_BaseSchema):
+    """Schema for validating status updates (Opus 4.5)."""
+
+    status: Status
+
+
+__all__ = [
+    "OrderCreateSchema",
+    "OrderFiltersSchema",
+    "OrderStatusUpdateSchema",
+    "Priority",
+    "Status",
+]
