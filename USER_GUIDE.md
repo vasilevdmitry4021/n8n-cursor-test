@@ -71,6 +71,7 @@ python app.py
 | GET   | `/api/v1/orders/<id>` | Получение заявки по ID | Нет |
 | PATCH | `/api/v1/orders/<id>/status` | Последовательное обновление статуса (Opus 4.5) | Нет |
 | GET   | `/health` | Readiness/monitoring без авторизации | Нет |
+| GET   | `/` | Краткое описание и ссылка на документацию | Нет |
 
 ## 8. Детали эндпоинтов
 ### 8.1 POST `/api/v1/orders`
@@ -111,6 +112,10 @@ curl -X POST http://localhost:5000/api/v1/orders \
 - Возвращает `{"status": "ok", "spec_version": "Opus 4.5"}`.
 - Подходит для readiness-проб Kubernetes/Nginx и внешнего мониторинга.
 - Не обращается к базе данных, поэтому отвечает мгновенно и не нагружает систему.
+
+### 8.6 GET `/`
+- Минимальный landing-ответ с полями `message`, `spec_version`, `docs`.
+- Удобно использовать как smoke-тест и ссылку на актуальный `USER_GUIDE.md`.
 
 ## 9. Модель данных `orders`
 | Поле | Тип | Описание |

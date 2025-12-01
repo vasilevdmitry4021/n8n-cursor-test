@@ -233,6 +233,19 @@ def healthcheck() -> Any:
     return jsonify({"status": "ok", "spec_version": SPEC_VERSION}), 200
 
 
+@app.route("/", methods=["GET"])
+def root() -> Any:
+    """Tiny landing endpoint pointing operators to docs."""
+
+    return jsonify(
+        {
+            "message": "TORO Maintenance Orders API",
+            "docs": "USER_GUIDE.md",
+            "spec_version": SPEC_VERSION,
+        }
+    ), 200
+
+
 @app.errorhandler(RequestValidationError)
 def handle_validation_error(error: RequestValidationError):
     logger.warning("Validation error: %s", error.errors)
