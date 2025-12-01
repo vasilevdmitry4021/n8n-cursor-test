@@ -37,6 +37,7 @@ app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
 CORS(app)  # Allow all origins for easier integration during development.
 init_db(app)  # Creates tables on first import to guarantee the API is usable.
+logger.info("Initialized %s (spec=%s)", SERVICE_NAME, SPEC_VERSION)
 
 
 class RequestValidationError(ValueError):
