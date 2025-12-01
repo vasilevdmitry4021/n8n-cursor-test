@@ -22,6 +22,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("toro.api")
 SPEC_VERSION = "Opus 4.5"
+SERVER_STARTED_AT = datetime.utcnow()
 
 ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
     "created": {"in_progress"},
@@ -230,7 +231,17 @@ def update_order_status(order_id: int) -> Any:
 def healthcheck() -> Any:
     """Lightweight readiness probe for Opus services."""
 
-    return jsonify({"status": "ok", "spec_version": SPEC_VERSION}), 200
+    uptime_seconds = int((datetime.utcnow() - SERVER_STARTED_AT).total_seconds())
+    return (
+        jsonify(
+            {
+                "status": "ok",
+                "spec_version": SPEC_VERSION,
+                "uptime_seconds": uptime_seconds,
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/", methods=["GET"])
