@@ -226,6 +226,13 @@ def update_order_status(order_id: int) -> Any:
     return jsonify(order.to_dict()), 200
 
 
+@app.route("/health", methods=["GET"])
+def healthcheck() -> Any:
+    """Lightweight readiness probe for Opus services."""
+
+    return jsonify({"status": "ok", "spec_version": SPEC_VERSION}), 200
+
+
 @app.errorhandler(RequestValidationError)
 def handle_validation_error(error: RequestValidationError):
     logger.warning("Validation error: %s", error.errors)
