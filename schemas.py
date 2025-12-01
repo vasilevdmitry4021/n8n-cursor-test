@@ -16,7 +16,9 @@ from pydantic import (
 
 Priority = Literal["low", "medium", "high"]
 Status = Literal["created", "in_progress", "completed"]
-PhoneStr = Annotated[str, Field(min_length=17, max_length=17)]
+# +7-XXX-XXX-XX-XX pattern includes 11 digits, 4 hyphens and a plus sign.
+# That totals 16 characters, so the field constraints reflect this exact length.
+PhoneStr = Annotated[str, Field(min_length=16, max_length=16)]
 
 PHONE_PATTERN = re.compile(r"^\+7-\d{3}-\d{3}-\d{2}-\d{2}$")
 
