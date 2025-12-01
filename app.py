@@ -30,6 +30,13 @@ CORS(app)  # Allow all origins for easier integration during development.
 init_db(app)  # Creates tables on first import to guarantee the API is usable.
 
 
+def hello_world() -> str:
+    """Return the canonical greeting for simple diagnostics."""
+
+    # Keep this helper centralized so tests or routes can reuse it.
+    return "Hello, World!"
+
+
 class RequestValidationError(ValueError):
     """Raised when incoming payloads do not satisfy requirements."""
 
