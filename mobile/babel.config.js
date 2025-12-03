@@ -11,7 +11,7 @@ module.exports = {
           '@components': './src/components',
           '@screens': './src/screens',
           '@theme': './src/theme',
-          '@types': './src/types',
+          '@models': './src/types',
           '@constants': './src/constants'
         }
       }

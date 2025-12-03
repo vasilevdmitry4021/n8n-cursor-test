@@ -80,6 +80,12 @@ curl "http://localhost:5000/api/v1/orders?priority=high&status=in_progress&depar
 curl http://localhost:5000/api/v1/orders/1
 ```
 
+### Удаление заказа
+```bash
+curl -X DELETE http://localhost:5000/api/v1/orders/1
+# Ответ 204 No Content при успешном удалении
+```
+
 ## Логирование и CORS
 - Все события пишутся в stdout в формате `timestamp | level | logger | message`. Создание заказа логируется уровнем INFO, ошибки — WARNING/ERROR.
 - CORS открыт для всех доменов, что упрощает разработку фронтенда. Для продакшена ограничьте источники в `app.py`.
