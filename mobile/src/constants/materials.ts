@@ -1,4 +1,4 @@
-import { Material } from '@types/material';
+import { Material } from '@models/material';
 
 export const mockMaterials: Material[] = [
   {
@@ -8,7 +8,7 @@ export const mockMaterials: Material[] = [
     unit: 'шт',
     quantity: 6,
     status: 'in_stock',
-    category: 'mandatory'
+    category: 'mandatory',
   },
   {
     id: 'hydraulic-fluid',
@@ -18,7 +18,7 @@ export const mockMaterials: Material[] = [
     quantity: 18,
     status: 'low',
     category: 'mandatory',
-    eta: 'Доставка 12 дек'
+    eta: 'Доставка 12 дек',
   },
   {
     id: 'coolant',
@@ -28,7 +28,7 @@ export const mockMaterials: Material[] = [
     quantity: 0,
     status: 'out',
     category: 'mandatory',
-    eta: 'Ожидается 15 дек'
+    eta: 'Ожидается 15 дек',
   },
   {
     id: 'v-belt',
@@ -37,6 +37,6 @@ export const mockMaterials: Material[] = [
     unit: 'шт',
     quantity: 9,
     status: 'in_stock',
-    category: 'optional'
-  }
+    category: 'optional',
+  },
 ];

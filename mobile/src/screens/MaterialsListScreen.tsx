@@ -5,13 +5,15 @@ import styled from 'styled-components/native';
 import { MaterialCard } from '@components/MaterialCard';
 import { mockMaterials } from '@constants/materials';
 import { colors, radii, spacing } from '@theme/index';
-import { Material, MaterialCategory } from '@types/material';
+import { Material, MaterialCategory } from '@models/material';
 
 const filters: Array<{ id: MaterialCategory | 'all'; label: string }> = [
   { id: 'all', label: 'Все' },
   { id: 'mandatory', label: 'Обязательные' },
-  { id: 'optional', label: 'Опциональные' }
+  { id: 'optional', label: 'Опциональные' },
 ];
+
+type FilterChipProps = { active: boolean };
 
 export const MaterialsListScreen: FC = () => {
   const [query, setQuery] = useState('');
@@ -99,7 +101,7 @@ const Subtitle = styled.Text`
 `;
 
 const SearchField = styled.TextInput.attrs({
-  placeholderTextColor: colors.textMuted
+  placeholderTextColor: colors.textMuted,
 })`
   padding: ${spacing.sm}px ${spacing.md}px;
   border-radius: ${radii.lg}px;
@@ -115,18 +117,19 @@ const Filters = styled.View`
   gap: ${spacing.sm}px;
 `;
 
-const FilterChip = styled.Pressable<{ active: boolean }>`
+const FilterChip = styled.Pressable<FilterChipProps>`
   padding: ${spacing.xs}px ${spacing.md}px;
   border-radius: 999px;
   border-width: 1px;
-  border-color: ${({ active }) => (active ? colors.primary : colors.border)};
-  background-color: ${({ active }) => (active ? colors.primaryMuted : colors.surface)};
+  border-color: ${({ active }: FilterChipProps) => (active ? colors.primary : colors.border)};
+  background-color: ${({ active }: FilterChipProps) =>
+    active ? colors.primaryMuted : colors.surface};
 `;
 
-const FilterText = styled.Text<{ active: boolean }>`
+const FilterText = styled.Text<FilterChipProps>`
   font-size: 13px;
   font-weight: 600;
-  color: ${({ active }) => (active ? colors.primary : colors.textSecondary)};
+  color: ${({ active }: FilterChipProps) => (active ? colors.primary : colors.textSecondary)};
 `;
 
 const Separator = styled.View`

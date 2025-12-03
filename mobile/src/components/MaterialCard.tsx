@@ -2,21 +2,24 @@ import React, { FC, useMemo } from 'react';
 import styled from 'styled-components/native';
 
 import { colors, radii, spacing } from '@theme/index';
-import { Material } from '@types/material';
+import { Material } from '@models/material';
 
 interface Props {
   material: Material;
 }
 
+type StatusPillProps = { background: string };
+type StatusTextProps = { color: string };
+
 const statusMap = {
   in_stock: { label: 'На складе', color: colors.success, bg: 'rgba(52, 199, 89, 0.15)' },
   low: { label: 'Заканчивается', color: colors.warning, bg: 'rgba(242, 120, 28, 0.15)' },
-  out: { label: 'Нет в наличии', color: colors.primary, bg: colors.primaryMuted }
+  out: { label: 'Нет в наличии', color: colors.primary, bg: colors.primaryMuted },
 } as const;
 
 const categoryMap = {
   mandatory: 'Критично для ТО',
-  optional: 'Опционально'
+  optional: 'Опционально',
 } as const;
 
 export const MaterialCard: FC<Props> = ({ material }) => {
@@ -24,8 +27,12 @@ export const MaterialCard: FC<Props> = ({ material }) => {
 
   // Keep the quantity color in sync with the current stock status.
   const quantityColor = useMemo(() => {
-    if (material.status === 'out') return colors.textMuted;
-    if (material.status === 'low') return colors.warning;
+    if (material.status === 'out') {
+      return colors.textMuted;
+    }
+    if (material.status === 'low') {
+      return colors.warning;
+    }
     return colors.textPrimary;
   }, [material.status]);
 
@@ -99,16 +106,16 @@ const Title = styled.Text`
   color: ${colors.textPrimary};
 `;
 
-const StatusPill = styled.View<{ background: string }>`
+const StatusPill = styled.View<StatusPillProps>`
   padding: ${spacing.xs}px ${spacing.md}px;
   border-radius: 999px;
-  background-color: ${({ background }) => background};
+  background-color: ${({ background }: StatusPillProps) => background};
 `;
 
-const StatusText = styled.Text<{ color: string }>`
+const StatusText = styled.Text<StatusTextProps>`
   font-size: 12px;
   font-weight: 600;
-  color: ${({ color }) => color};
+  color: ${({ color }: StatusTextProps) => color};
 `;
 
 const Meta = styled.View`
