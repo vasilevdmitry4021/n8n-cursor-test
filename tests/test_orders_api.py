@@ -118,3 +118,20 @@ def test_order_number_sequence_increments(client, sample_payload):
 
     assert first != second
     assert int(second.split("-")[-1]) == int(first.split("-")[-1]) + 1
+
+
+def test_delete_order_success(client, sample_payload):
+    order_id = create_order(client, sample_payload).get_json()["id"]
+
+    delete_response = client.delete(f"/api/v1/orders/{order_id}")
+    assert delete_response.status_code == 204
+
+    follow_up = client.get(f"/api/v1/orders/{order_id}")
+    assert follow_up.status_code == 404
+
+
+def test_delete_order_returns_404_for_missing_record(client):
+    response = client.delete("/api/v1/orders/12345")
+
+    assert response.status_code == 404
+    assert response.get_json()["message"] == "Order not found"

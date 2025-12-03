@@ -175,6 +175,28 @@ def get_order(order_id: int) -> Any:
     return jsonify(order.to_dict()), 200
 
 
+@app.route("/api/v1/orders/<int:order_id>", methods=["DELETE"])
+def delete_order(order_id: int) -> Any:
+    """Remove an order permanently when it is no longer needed."""
+
+    order = db.session.get(Order, order_id)
+    if order is None:
+        abort(404, description="Order not found")
+
+    try:
+        db.session.delete(order)
+        db.session.commit()
+    except SQLAlchemyError as exc:  # pragma: no cover - DB failure path
+        db.session.rollback()
+        logger.exception("Failed to delete order %s: %s", order_id, exc)
+        abort(500, description="Unable to delete order at this time")
+
+    # 204 keeps responses lightweight because clients already know which
+    # resource was targeted by the request URL.
+    logger.info("Deleted order %s (id=%s)", order.order_number, order.id)
+    return ("", 204)
+
+
 @app.errorhandler(RequestValidationError)
 def handle_validation_error(error: RequestValidationError):
     logger.warning("Validation error: %s", error.errors)
